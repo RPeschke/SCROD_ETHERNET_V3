@@ -1,6 +1,6 @@
 
 # SCROD_ETHERNET_V3
-# SCROD_ETHERNET_V3
+
 This repository contains the Ethernet module compatible with the SCROD RevA5. In it are a few example projects that can be used as a
 spring board for implementing the module in your project. 
 
