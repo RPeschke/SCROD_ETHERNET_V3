@@ -56,7 +56,9 @@ entity CommandInterpreter is
       regRdData   : in  slv(REG_DATA_BITS_G-1 downto 0);
       regReq      : out sl;
       regOp       : out sl;
-      regAck      : in  sl
+      regAck      : in  sl;
+		----temporary command interpreter state
+		cmd_int_state : out slv(4 downto 0)
    ); 
 end CommandInterpreter;
 
@@ -167,7 +169,7 @@ architecture rtl of CommandInterpreter is
 
    
 begin
-
+	cmd_int_state <= stateNum;
    stateNum <= "00000" when r.state = IDLE_S else             -- 0 x00
                "00001" when r.state = PACKET_SIZE_S else      -- 1 x01
                "00010" when r.state = PACKET_TYPE_S else      -- 2 x02
@@ -225,7 +227,7 @@ begin
                end if;
             end if;
          when PACKET_SIZE_S => 
-            if rxDataValid = '1' then
+            if rxDataValid = '1' then 
                rxDataReady <= '1';
                v.wordsLeft := rxData;
                -- Possible errors:
@@ -279,7 +281,7 @@ begin
 						elsif (rxData(31 downto 8) = wordDC) and (rxData(7 downto 0) /= broadcastDC) THEN 
 							dc_id <= conv_integer(unsigned(rxData(7 downto 0))); 
 							loadQB <= '1';
-						else
+						else --unused case, disallow broadcast
 							dc_id <= conv_integer(unsigned(broadcastDC)); --if broadcasting, set dc_id to "broadcast" 
 							loadQB <= '1';
 						end if;
@@ -516,23 +518,7 @@ begin
                   when others => v.txData := (others => '1');
                end case;
 					
---					ELSIF (dc_id = broadcastDC) and (loadQB = '1') THEN
---						case conv_integer(r.wordOutCnt) is
---                  when 0 => v.txData := WORD_HEADER_C;
---                  when 1 => v.txData := x"00000006";
---                  when 2 => v.txData := WORD_ACK_C;
---                  when 3 => v.txData := r.deviceID;
---                  when 4 => v.txData := x"00" & r.commandId;
---                  when 5 => v.txData := WORD_READ_C;
---                  when 6 => v.txData := DC_RESP(0); --hardcoded for HODO 
---						when 7 => v.txData := DC_RESP(1); --hardcode for HODO
---						when 8 => v.txData := DC_RESP(2); --hardcode for HODO
---						when 9 => v.txData := DC_RESP(3); --hardcode for HODO
---                  when 10 => v.txData     := r.checksum;
---                            v.txDataLast := '1';
---                            v.state      := CHECK_MORE_S;
---                  when others => v.txData := (others => '1');
---					  end case;
+
 					ELSIF	(dc_id /= broadcastDC) and (loadQB = '1') THEN
 						case conv_integer(r.wordOutCnt) is
                   when 0 => v.txData := WORD_HEADER_C;
@@ -691,7 +677,7 @@ begin
 		end if; 
 	end process;
 	
-	SendTrigger : Process(EVNT_FLAG, usrClk) is
+	SendTrigger : Process(EVNT_FLAG, t) is
 	
 		  variable g : RegType := REG_INIT_C;
    begin
@@ -737,6 +723,7 @@ begin
 			
 	QBload_reg : process (dataClk, start_load) is 
 	begin 
+	 if(rising_edge(dataClk)) THEN
 		if start_load = '1' then
 			if dc_id = 10 then
 				QB_WrEn <= (others =>'1');
@@ -747,6 +734,7 @@ begin
 		else
 			QB_WrEn <= (others =>'0');
 		end if;
+	 end if;
   end process;
 
 end rtl;
