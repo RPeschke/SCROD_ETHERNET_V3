@@ -3,7 +3,7 @@
 -- Project       : General Purpose Core
 ---------------------------------------------------------------------------------
 -- File          : CommandInterpreter.vhd
--- Author        : Kurtis Nishimura
+-- Author        : Kurtis Nishimura, updated by Nathan Park (park.nathan@gmail.com)
 ---------------------------------------------------------------------------------
 -- Description:
 -- Packet parser for old Belle II format.
@@ -14,9 +14,11 @@ LIBRARY ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
+use work.all;
 use work.UtilityPkg.all;
 use work.Eth1000BaseXPkg.all;
 use work.GigabitEthPkg.all;
+use work.BMD_definitions.all; --need to include BMD_definitions in addition to work.all
 
 entity CommandInterpreter is 
    generic (
@@ -640,9 +642,9 @@ begin
 
    end process;
 	
-   seq : process (usrClk) is
+   seq : process (dataClk) is
    begin
-      if (rising_edge(usrClk)) then
+      if (rising_edge(dataClk)) then
          r <= rin after GATE_DELAY_G;
 			t <= tin after GATE_DELAY_G;
 			if EVNT_FLAG = '0' then
