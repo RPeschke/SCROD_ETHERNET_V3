@@ -59,7 +59,8 @@ entity CommandInterpreter is
       regReq      : out sl;
       regOp       : out sl;
       regAck      : in  sl;
-		----temporary command interpreter state
+		--debug ports
+		ldQBLink 	: out sl;
 		cmd_int_state : out slv(4 downto 0)
    ); 
 end CommandInterpreter;
@@ -169,9 +170,12 @@ architecture rtl of CommandInterpreter is
    -- attribute keep : string;
    -- attribute keep of stateNum : signal is "true";
 
+	attribute mark_debug : string;   attribute mark_debug of loadQB : signal is "true";
+	attribute mark_debug of stateNum : signal is "true";
    
 begin
 	cmd_int_state <= stateNum;
+	ldQBLink <= loadQB;
    stateNum <= "00000" when r.state = IDLE_S else             -- 0 x00
                "00001" when r.state = PACKET_SIZE_S else      -- 1 x01
                "00010" when r.state = PACKET_TYPE_S else      -- 2 x02
